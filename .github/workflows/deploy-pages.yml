@@ -1,0 +1,57 @@
+# Publishes the browser simulator to GitHub Pages.
+#
+# One-time setup in the repository: Settings, Pages, and set the source to
+# "GitHub Actions". Without that the deploy step fails with a permissions error
+# that does not say what is actually wrong.
+#
+# Only the simulation/ folder is published, so the site root is the simulator
+# itself rather than a rendering of the repository.
+
+name: Deploy simulator
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'simulation/**'
+      - '.github/workflows/deploy-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let a running deploy finish rather than cancelling it, so the published site
+# is never left half-updated.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the scripts parse
+        run: |
+          for f in simulation/js/*.js; do
+            node --check "$f"
+          done
+
+      - name: Verify the default gains still balance
+        run: node tools/sim-check.js
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: simulation
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Self-Balancing Robot Simulator</title>
+<meta name="description" content="Digital twin of an Arduino self-balancing robot: Kalman filter and sliding mode control, in the browser.">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+  <h1>Self-Balancing Robot Simulator</h1>
+  <p>
+    A digital twin of the Arduino robot in
+    <a href="https://github.com/juanjo402/arduino-self-balancing-robot">this repository</a>.
+    Same physical parameters, same Kalman filter, same sliding mode control law as
+    the firmware. Tune here first, then copy the gains into <code>Config.h</code>.
+  </p>
+</header>
+
+<main>
+  <div class="panel">
+    <canvas id="stage"></canvas>
+    <div class="readouts">
+      <div class="readout"><span class="k">State</span><span class="v" id="rState">–</span></div>
+      <div class="readout"><span class="k">Tilt</span><span class="v" id="rTilt">–</span></div>
+      <div class="readout"><span class="k">Est. error</span><span class="v" id="rErr">–</span></div>
+      <div class="readout"><span class="k">Speed</span><span class="v" id="rSpeed">–</span></div>
+      <div class="readout"><span class="k">Position</span><span class="v" id="rPos">–</span></div>
+      <div class="readout"><span class="k">Surface s</span><span class="v" id="rSurf">–</span></div>
+    </div>
+  </div>
+
+  <div class="panel controls">
+
+    <section>
+      <h2>Run</h2>
+      <div class="row">
+        <button id="btnRun" class="primary">Pause</button>
+        <button id="btnReset">Reset</button>
+        <button id="btnSlow" aria-pressed="false">Slow motion</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Controller</h2>
+      <div class="seg" id="modeSeg">
+        <button data-mode="smc" aria-pressed="true">Sliding mode</button>
+        <button data-mode="pid" aria-pressed="false">PID</button>
+        <button data-mode="both" aria-pressed="false">Compare</button>
+      </div>
+      <p class="note" id="modeNote"></p>
+    </section>
+
+    <section>
+      <h2>Disturbances</h2>
+      <div class="row">
+        <button id="btnPush">Shove it</button>
+        <button id="btnPayload">Add payload</button>
+        <button id="btnDriveFwd">Drive forward</button>
+      </div>
+      <div id="distSliders"></div>
+      <label class="check">
+        <input type="checkbox" id="chkTellModel">
+        <span>Tell the controller about the payload
+          <span class="hint">Off means the controller keeps using the nominal mass and centre of mass. That mismatch is exactly what sliding mode control is meant to absorb.</span>
+        </span>
+      </label>
+    </section>
+
+    <section>
+      <h2>Sensors</h2>
+      <label class="check">
+        <input type="checkbox" id="chkSensors" checked>
+        <span>Simulate the MPU-6050
+          <span class="hint">Off feeds the controller the exact state, which is the most common way a simulation flatters a design.</span>
+        </span>
+      </label>
+      <label class="check">
+        <input type="checkbox" id="chkCompensate" checked>
+        <span>Compensate the accelerometer
+          <span class="hint">Subtract the robot's own acceleration before reading tilt. Turn it off and watch: the estimate drifts away and the robot falls with nothing visibly wrong.</span>
+        </span>
+      </label>
+      <div id="sensorSliders"></div>
+    </section>
+
+    <section>
+      <h2>Sliding mode gains</h2>
+      <div id="smcSliders"></div>
+    </section>
+
+    <section>
+      <h2>PID gains</h2>
+      <div id="pidSliders"></div>
+    </section>
+
+    <section>
+      <h2>Kalman filter</h2>
+      <div id="kalmanSliders"></div>
+    </section>
+
+    <section>
+      <h2>Robot</h2>
+      <div id="robotSliders"></div>
+      <p class="note">Changing these restarts the run, because they change the plant.</p>
+    </section>
+
+    <section>
+      <h2>Export</h2>
+      <div class="row">
+        <button id="btnCopy">Copy for Config.h</button>
+        <button id="btnDefaults">Restore defaults</button>
+      </div>
+      <pre id="gainsOut"></pre>
+    </section>
+
+  </div>
+</main>
+
+<div class="plots">
+  <div class="panel"><canvas id="plotTilt"></canvas></div>
+  <div class="panel"><canvas id="plotEst"></canvas></div>
+  <div class="panel"><canvas id="plotCtrl"></canvas></div>
+</div>
+
+<footer>
+  <p>
+    Keyboard: <code>space</code> run or pause, <code>r</code> reset, <code>p</code> shove,
+    arrow keys to drive.
+  </p>
+  <p>
+    The model, the filter and the control law are derived in the repository's
+    <a href="https://github.com/juanjo402/arduino-self-balancing-robot/tree/main/docs/theory">theory notes</a>.
+    MIT licensed.
+  </p>
+</footer>
+
+<script src="js/params.js"></script>
+<script src="js/physics.js"></script>
+<script src="js/sensors.js"></script>
+<script src="js/kalman.js"></script>
+<script src="js/controllers.js"></script>
+<script src="js/robot.js"></script>
+<script src="js/plot.js"></script>
+<script src="js/render.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+# Compiles the Arduino sketch for the Mega on every push.
+#
+# It catches the things that are easy to miss when you only ever build from the
+# IDE on one machine: a header that is not committed, a stale include, a change
+# that compiles for you because of something left in your own sketchbook.
+#
+# It does not test behaviour. Nothing here can tell you the robot will balance.
+
+name: Build firmware
+
+on:
+  push:
+    paths:
+      - 'firmware/**'
+      - '.github/workflows/build-firmware.yml'
+  pull_request:
+    paths:
+      - 'firmware/**'
+      - '.github/workflows/build-firmware.yml'
+  workflow_dispatch:
+
+jobs:
+  compile:
+    name: Arduino Mega 2560
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install arduino-cli
+        uses: arduino/setup-arduino-cli@v2
+
+      - name: Install the AVR core
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install arduino:avr
+
+      - name: Compile
+        run: |
+          arduino-cli compile \
+            --fqbn arduino:avr:mega \
+            --warnings all \
+            firmware/SelfBalancingRobot
